@@ -11,7 +11,7 @@ export default function CategoryPage({ category }: { category: Category }) {
     <SiteLayout title={`${category[lang]} — ModelHub`}>
       <div className="container page-section">
         <div className="page-heading">
-          <Link className="breadcrumb" href="/#categories">
+          <Link className="breadcrumb" href="/categories">
             ← {t('Все категории', 'All categories')}
           </Link>
           <p className="eyebrow">{t('КАТЕГОРИЯ', 'CATEGORY')}</p>

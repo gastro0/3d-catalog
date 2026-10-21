@@ -14,8 +14,8 @@ export default function ModelsPage() {
           <h1>{t('Найдите свою форму.', 'Find your form.')}</h1>
           <p>
             {t(
-              'Модели для проектов, экспериментов и новых открытий.',
-              'Models for projects, experiments, and new discoveries.',
+              '3D-модели для печати, игр, визуализации и проектирования. Найдите нужную по названию, тегам или назначению.',
+              '3D models for printing, games, visualization and engineering. Search by name, tags or purpose.',
             )}
           </p>
         </div>

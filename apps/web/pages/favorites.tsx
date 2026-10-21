@@ -9,7 +9,7 @@ export default function FavoritesPage() {
       <div className="container page-section">
         <div className="page-heading">
           <p className="eyebrow">{t('ВАША ПОДБОРКА', 'YOUR COLLECTION')}</p>
-          <h1>{t('Сохранённое вдохновение.', 'Inspiration, saved.')}</h1>
+          <h1>{t('Избранное', 'Saved models')}</h1>
           <p>
             {t(
               'Любимые модели всегда под рукой. Список хранится в этом браузере.',
