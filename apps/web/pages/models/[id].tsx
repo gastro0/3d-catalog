@@ -3,7 +3,13 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { SiteLayout } from '../../components/layout/SiteLayout';
 import { Icon } from '../../components/ui/Icon';
-import { categoryLabel } from '../../features/catalog/categories';
+import {
+  categoryLabel,
+  features,
+  licenses,
+  metadataLabel,
+  purposes,
+} from '../../features/catalog/categories';
 import { api, errorMessage, formatSize } from '../../lib/api';
 import { getSupabase } from '../../lib/supabase';
 import { useAuth } from '../../providers/AuthProvider';
@@ -23,6 +29,14 @@ export default function ModelPage() {
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
+  const [revision, setRevision] = useState(0);
+  const from =
+    typeof router.query.from === 'string' &&
+    /^\/(?:$|\?|models(?:\?|$)|categories(?:\/[^/?#]+)?(?:\?|$)|favorites(?:\?|$)|profile(?:\?|$))/.test(
+      router.query.from,
+    )
+      ? router.query.from
+      : '/models';
   useEffect(() => {
     if (!id) return;
     const controller = new AbortController();
@@ -44,7 +58,7 @@ export default function ModelPage() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [id]);
+  }, [id, revision]);
 
   async function download() {
     setBusy(true);
@@ -93,7 +107,7 @@ export default function ModelPage() {
   return (
     <SiteLayout title={model ? `${model.name} — ModelHub` : 'ModelHub'}>
       <div className="container page-section">
-        <Link href="/models" className="breadcrumb">
+        <Link href={from} className="breadcrumb">
           ← {t('В каталог', 'Back to catalog')}
         </Link>
         {loading ? (
@@ -104,6 +118,12 @@ export default function ModelPage() {
           <div className="empty-state" role="alert">
             <h1>{t('Не удалось открыть модель', 'Unable to open model')}</h1>
             <p>{error || t('Модель не найдена.', 'Model not found.')}</p>
+            <button
+              className="button button-secondary"
+              onClick={() => setRevision((value) => value + 1)}
+            >
+              {t('Повторить', 'Retry')}
+            </button>
           </div>
         ) : (
           <div className="model-detail">
@@ -125,6 +145,19 @@ export default function ModelPage() {
             <div className="detail-copy">
               <p className="eyebrow">{categoryLabel(model.category, lang)}</p>
               <h1>{model.name}</h1>
+              {!!model.purposes?.length && (
+                <div className="model-purposes">
+                  {model.purposes.map((purpose) => (
+                    <Link
+                      href={{ pathname: '/models', query: { purpose } }}
+                      className="metadata-badge"
+                      key={purpose}
+                    >
+                      {metadataLabel(purposes, purpose, lang)}
+                    </Link>
+                  ))}
+                </div>
+              )}
               <p className="model-description">
                 {model.description ||
                   t(
@@ -132,6 +165,24 @@ export default function ModelPage() {
                     'The author has not added a description yet.',
                   )}
               </p>
+              <div className="detail-actions">
+                <button className="button" onClick={download} disabled={busy}>
+                  <Icon name="download" />
+                  {busy
+                    ? t('Подождите…', 'Please wait…')
+                    : t('Скачать модель', 'Download model')}
+                </button>
+                <button
+                  className="button button-secondary"
+                  onClick={() => toggle(id)}
+                  aria-pressed={ids.includes(id)}
+                >
+                  <Icon name="heart" />
+                  {ids.includes(id)
+                    ? t('Сохранено', 'Saved')
+                    : t('Сохранить', 'Save')}
+                </button>
+              </div>
               <dl className="model-specs">
                 <div>
                   <dt>{t('Формат', 'Format')}</dt>
@@ -157,25 +208,77 @@ export default function ModelPage() {
                       : '—'}
                   </dd>
                 </div>
+                <div>
+                  <dt>{t('Лицензия', 'License')}</dt>
+                  <dd>
+                    {model.license ? (
+                      <a
+                        className="text-link"
+                        href={
+                          licenses.find((item) => item.value === model.license)
+                            ?.url
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {metadataLabel(licenses, model.license, lang)} ↗
+                      </a>
+                    ) : (
+                      t('Не указана автором', 'Not specified by the author')
+                    )}
+                  </dd>
+                </div>
+                {!!model.dimensions && (
+                  <div>
+                    <dt>{t('Размеры модели', 'Model dimensions')}</dt>
+                    <dd>{model.dimensions}</dd>
+                  </div>
+                )}
+                {!!model.software?.length && (
+                  <div>
+                    <dt>{t('Совместимость', 'Compatible software')}</dt>
+                    <dd>{model.software.join(', ')}</dd>
+                  </div>
+                )}
               </dl>
-              <div className="detail-actions">
-                <button className="button" onClick={download} disabled={busy}>
-                  <Icon name="download" />
-                  {busy
-                    ? t('Подождите…', 'Please wait…')
-                    : t('Скачать модель', 'Download model')}
-                </button>
-                <button
-                  className="button button-secondary"
-                  onClick={() => toggle(id)}
-                  aria-pressed={ids.includes(id)}
-                >
-                  <Icon name="heart" />
-                  {ids.includes(id)
-                    ? t('Сохранено', 'Saved')
-                    : t('Сохранить', 'Save')}
-                </button>
-              </div>
+              {!!model.features?.length && (
+                <div className="detail-section">
+                  <h2>{t('Особенности', 'Features')}</h2>
+                  <div className="model-purposes">
+                    {model.features.map((feature) => (
+                      <span className="metadata-badge" key={feature}>
+                        {metadataLabel(features, feature, lang)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!!model.file_contents && (
+                <div className="detail-section">
+                  <h2>{t('Состав файлов', 'File contents')}</h2>
+                  <p>{model.file_contents}</p>
+                </div>
+              )}
+              {!!model.print_notes && (
+                <div className="detail-section">
+                  <h2>
+                    {t('Рекомендации по печати', 'Printing recommendations')}
+                  </h2>
+                  <p>{model.print_notes}</p>
+                </div>
+              )}
+              {!!model.tags?.length && (
+                <div className="model-tags">
+                  {model.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={{ pathname: '/models', query: { q: tag } }}
+                    >
+                      #{tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
               {user?.id === model.owner_id && (
                 <button
                   className="text-button danger-text"

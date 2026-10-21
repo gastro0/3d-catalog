@@ -53,6 +53,26 @@ export class CatalogController {
         description: { type: 'string', maxLength: 5000 },
         category: { type: 'string' },
         polygons: { type: 'integer', minimum: 0 },
+        purposes: {
+          type: 'string',
+          description: 'JSON array: printing, visualization, engineering',
+        },
+        tags: {
+          type: 'string',
+          description: 'JSON array of up to 12 tags, 40 characters each',
+        },
+        features: {
+          type: 'string',
+          description: 'JSON array of model features',
+        },
+        software: {
+          type: 'string',
+          description: 'JSON array of compatible software names',
+        },
+        license: { type: 'string' },
+        dimensions: { type: 'string', maxLength: 160 },
+        print_notes: { type: 'string', maxLength: 2000 },
+        file_contents: { type: 'string', maxLength: 2000 },
       },
     },
   })

@@ -12,3 +12,14 @@ Thumbs.db
 .idea/
 .vscode/
 .npm-cache/
+
+# Local learning files
+/learn.py
+/LEARNING_PROGRESS.md
+
+# Python and pytest
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/

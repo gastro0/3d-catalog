@@ -12,6 +12,18 @@ import { validateModelUpload } from './catalog.validation';
 
 const PUBLIC_FIELDS =
   'id,name,description,category,format,polygons,imageUrl,file_size,created_at,owner_id';
+const METADATA_FIELDS =
+  'purposes,tags,features,software,license,dimensions,print_notes,file_contents';
+const EMPTY_METADATA = {
+  purposes: [] as string[],
+  tags: [] as string[],
+  features: [] as string[],
+  software: [] as string[],
+  license: '',
+  dimensions: '',
+  print_notes: '',
+  file_contents: '',
+};
 
 @Injectable()
 export class CatalogService {
@@ -26,11 +38,21 @@ export class CatalogService {
   }
 
   async findAll() {
-    const { data, error } = await this.supabase
+    let { data, error } = await this.supabase
       .getClient()
       .from('models')
-      .select(PUBLIC_FIELDS)
+      .select(`${PUBLIC_FIELDS},${METADATA_FIELDS}`)
       .order('created_at', { ascending: false });
+    if (error?.code === '42703' || error?.code === 'PGRST204') {
+      const legacy = await this.supabase
+        .getClient()
+        .from('models')
+        .select(PUBLIC_FIELDS)
+        .order('created_at', { ascending: false });
+      data =
+        legacy.data?.map((model) => ({ ...model, ...EMPTY_METADATA })) ?? null;
+      error = legacy.error;
+    }
     if (error)
       throw new InternalServerErrorException(
         'Не удалось загрузить каталог. Проверьте SQL-схему.',
@@ -39,12 +61,22 @@ export class CatalogService {
   }
 
   async findOne(id: string) {
-    const { data, error } = await this.supabase
+    let { data, error } = await this.supabase
       .getClient()
       .from('models')
-      .select(PUBLIC_FIELDS)
+      .select(`${PUBLIC_FIELDS},${METADATA_FIELDS}`)
       .eq('id', id)
       .maybeSingle();
+    if (error?.code === '42703' || error?.code === 'PGRST204') {
+      const legacy = await this.supabase
+        .getClient()
+        .from('models')
+        .select(PUBLIC_FIELDS)
+        .eq('id', id)
+        .maybeSingle();
+      data = legacy.data ? { ...legacy.data, ...EMPTY_METADATA } : null;
+      error = legacy.error;
+    }
     if (error)
       throw new InternalServerErrorException('Не удалось загрузить модель.');
     if (!data) throw new NotFoundException('Модель не найдена.');
@@ -104,7 +136,7 @@ export class CatalogService {
         storage_path: path,
         file_size: file.size,
       })
-      .select(PUBLIC_FIELDS)
+      .select(`${PUBLIC_FIELDS},${METADATA_FIELDS}`)
       .single();
     if (error) {
       const { error: cleanupError } = await storage.remove([path]);

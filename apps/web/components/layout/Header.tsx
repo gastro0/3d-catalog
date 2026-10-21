@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { useAuth } from '../../providers/AuthProvider';
 import { usePreferences } from '../../providers/PreferencesProvider';
-import { UploadModal } from '../../features/catalog/UploadModal';
+import { AddModelButton } from '../../features/catalog/AddModelButton';
 import { Icon } from '../ui/Icon';
 
 export function Header() {
   const { pathname } = useRouter();
   const { user, loading, openAuth } = useAuth();
   const { lang, theme, t, toggleLang, toggleTheme } = usePreferences();
-  const [uploadOpen, setUploadOpen] = useState(false);
   return (
     <>
       <header className="site-header">
@@ -26,18 +24,18 @@ export function Header() {
             aria-label={t('Основная навигация', 'Main navigation')}
           >
             <Link
-              href="/models"
-              className={pathname.startsWith('/models') ? 'active' : ''}
+              href="/"
+              className={
+                pathname === '/' || pathname.startsWith('/models')
+                  ? 'active'
+                  : ''
+              }
             >
               {t('Каталог', 'Catalog')}
             </Link>
             <Link
-              href="/#categories"
-              className={
-                pathname === '/' || pathname.startsWith('/categories')
-                  ? 'active'
-                  : ''
-              }
+              href="/categories"
+              className={pathname.startsWith('/categories') ? 'active' : ''}
             >
               {t('Категории', 'Categories')}
             </Link>
@@ -63,13 +61,7 @@ export function Header() {
             >
               <Icon name={theme === 'light' ? 'moon' : 'sun'} />
             </button>
-            <button
-              className="button button-small upload-button"
-              onClick={() => (user ? setUploadOpen(true) : openAuth())}
-            >
-              <Icon name="plus" />
-              <span>{t('Загрузить модель', 'Upload model')}</span>
-            </button>
+            <AddModelButton compact />
             {user ? (
               <Link
                 href="/profile"
@@ -80,7 +72,7 @@ export function Header() {
               </Link>
             ) : (
               <button
-                className="login-button"
+                className="button button-small login-button"
                 onClick={openAuth}
                 disabled={loading}
               >
@@ -90,7 +82,6 @@ export function Header() {
           </div>
         </div>
       </header>
-      <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </>
   );
 }
