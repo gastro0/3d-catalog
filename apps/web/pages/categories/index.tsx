@@ -14,17 +14,12 @@ export default function CategoriesPage() {
   const { lang, t } = usePreferences();
   const { models, loading, error, reload } = useCatalog();
   const [search, setSearch] = useState('');
-  const [showEmpty, setShowEmpty] = useState(false);
   const counts = categoryCounts(models);
   const hasPopulated = Object.values(counts).some((count) => count > 0);
-  const visible = categories.filter(
-    (category) =>
-      (showEmpty || !hasPopulated || counts[category.slug] > 0) &&
-      normalizeSearch(
-        [category.ru, category.en, category.detail, category.detailEn].join(
-          ' ',
-        ),
-      ).includes(normalizeSearch(search)),
+  const visible = categories.filter((category) =>
+    normalizeSearch(
+      [category.ru, category.en, category.detail, category.detailEn].join(' '),
+    ).includes(normalizeSearch(search)),
   );
 
   return (
@@ -52,14 +47,6 @@ export default function CategoriesPage() {
                 'Try kitchen or miniatures',
               )}
             />
-          </label>
-          <label className="category-toggle">
-            <input
-              type="checkbox"
-              checked={showEmpty}
-              onChange={(event) => setShowEmpty(event.target.checked)}
-            />
-            {t('Показывать пустые', 'Include empty categories')}
           </label>
           <span className="muted">
             {visible.length} / {categories.length}
@@ -118,16 +105,13 @@ export default function CategoriesPage() {
             <h2>{t('Категория не найдена', 'No category found')}</h2>
             <p>
               {t(
-                'Попробуйте другое слово или покажите пустые категории.',
-                'Try another word or include empty categories.',
+                'Попробуйте другое слово или сбросьте поиск.',
+                'Try another word or clear the search.',
               )}
             </p>
             <button
               className="button button-secondary"
-              onClick={() => {
-                setSearch('');
-                setShowEmpty(true);
-              }}
+              onClick={() => setSearch('')}
             >
               {t('Показать все категории', 'Show all categories')}
             </button>
